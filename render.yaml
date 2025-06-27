@@ -1,0 +1,54 @@
+services:
+  - type: web
+    name: canvas-web
+    env: docker
+    plan: standard
+    autoDeploy: false
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: canvas-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: canvas-redis
+          type: redis
+          property: connectionString
+      - key: CANVAS_LMS_DOMAIN
+        value: your-canvas-app.onrender.com
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: CANVAS_LMS_EMAIL_FROM
+        value: noreply@yourdomain.com
+      - key: CANVAS_LMS_ADMIN_EMAIL
+        value: admin@yourdomain.com
+
+  - type: worker
+    name: canvas-worker
+    env: docker
+    plan: standard
+    autoDeploy: false
+    startCommand: bundle exec sidekiq
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: canvas-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: canvas-redis
+          type: redis
+          property: connectionString
+
+databases:
+  - name: canvas-db
+    plan: standard
+    postgresMajorVersion: 13
+
+redis:
+  - name: canvas-redis
+    plan: standard
